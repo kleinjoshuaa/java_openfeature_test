@@ -9,33 +9,34 @@ import java.util.concurrent.RejectedExecutionException;
 
 public class Main {
 
-    public static final String SPLIT_API_KEY = "SPLIT_API_KEY";
-    public static final String TARGETING_KEY = "user";
+    // keys in .env
+    public static final String ENV_SPLIT_API_KEY = "SPLIT_API_KEY";
+    public static final String ENV_FEATURE_FLAG_NAME = "FEATURE_FLAG_NAME";
+    public static final String ENV_TARGET_KEY = "TARGET_KEY";
+    public static final String ENV_TARGET_USER = "TARGET_USER";
+
     public static final String CLIENT_NAME = "OpenFeature-Java-Example";
-    public static final String USER_1_TARGET = "user-1";
-    public static final String FEATURE_FLAG_NAME = "sre-bff-client-test-string";
     public static final String DEFAULT_VALUE = "default";
 
     public static void main(String... args) {
-
         // Load environment
         var dotenv = Dotenv.load();
 
         // Setup split and openfeature
-        var splitProvider = new SplitProvider(dotenv.get(SPLIT_API_KEY));
+        var splitProvider = new SplitProvider(dotenv.get(ENV_SPLIT_API_KEY));
         var api = OpenFeatureAPI.getInstance();
         api.setProvider(splitProvider);
 
         // Setup default evaluation context, to make sure we always have one set avoiding errors
-        var defaultContext = new ImmutableContext(TARGETING_KEY);
+        var defaultContext = new ImmutableContext(dotenv.get(ENV_TARGET_KEY));
         api.setEvaluationContext(defaultContext);
 
         // Get client for interaction
         var client = api.getClient(CLIENT_NAME);
 
         // Query feature flag
-        var context = new ImmutableContext(USER_1_TARGET);
-        var treatment = client.getStringValue(FEATURE_FLAG_NAME, DEFAULT_VALUE, context);
+        var context = new ImmutableContext(dotenv.get(ENV_TARGET_USER));
+        var treatment = client.getStringValue(dotenv.get(ENV_FEATURE_FLAG_NAME), DEFAULT_VALUE, context);
 
         System.out.println("""
                 \n
@@ -63,11 +64,5 @@ public class Main {
                 _|    _|  _|    _|  _|    _|  _|       \s
                 _|_|_|      _|_|    _|    _|    _|_|_| \s
                 \n""");
-
-        try {
-            System.exit(0);
-        } catch (RejectedExecutionException ignored) {
-            // Noop ignore waiting for syncing execution
-        }
     }
 }
